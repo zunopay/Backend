@@ -1,10 +1,10 @@
 pub mod app;
 pub mod auth;
-pub mod payment;
 pub mod error;
+mod indexer;
+pub mod payment;
 pub mod s3;
 pub mod user;
-mod indexer;
 
 use crate::{
     config::config,

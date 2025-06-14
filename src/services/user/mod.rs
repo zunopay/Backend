@@ -3,8 +3,7 @@ use sea_orm::EntityTrait;
 use crate::{
     db::entity::{prelude::User, user::Model as UserModel},
     services::{
-        AppState,
-        error::{Result, ServiceError},
+        error::{EntityId, Result, ServiceError}, AppState
     },
 };
 
@@ -19,7 +18,7 @@ impl UserService {
         let user = User::find_by_id(id).one(state.db()).await?;
         user.ok_or(ServiceError::EntityNotFound {
             entity: Self::USER,
-            id,
+            id: EntityId::Int(id),
         })
     }
 }

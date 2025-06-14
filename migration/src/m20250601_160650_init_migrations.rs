@@ -26,6 +26,14 @@ impl MigrationTrait for Migration {
                             .unique_key(),
                     )
                     .col(ColumnDef::new(User::Password).string().not_null())
+                    .col(ColumnDef::new(User::WalletAddress).string())
+                    .col(
+                        ColumnDef::new(User::CreatedAt)
+                            .date_time()
+                            .not_null()
+                            .default(Expr::current_timestamp()),
+                    )
+                    .col(ColumnDef::new(User::EmailVerifiedAt).date_time())
                     .col(
                         ColumnDef::new(User::S3BucketSlug)
                             .string()
@@ -132,6 +140,9 @@ enum User {
     Username,
     Email,
     Password,
+    WalletAddress,
+    CreatedAt,
+    EmailVerifiedAt,
     S3BucketSlug,
 }
 

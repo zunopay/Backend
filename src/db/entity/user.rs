@@ -13,6 +13,9 @@ pub struct Model {
     #[sea_orm(unique)]
     pub username: String,
     pub password: String,
+    pub wallet_address: Option<String>,
+    pub created_at: DateTime,
+    pub email_verified_at: Option<DateTime>,
     #[sea_orm(unique)]
     pub s3_bucket_slug: String,
 }

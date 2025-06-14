@@ -7,9 +7,14 @@ use super::{
 };
 use crate::{
     ctx::Ctx,
-    db::entity::{payment, prelude::Payment, user},
+    db::entity::{
+        payment::{self, Column},
+        prelude::Payment,
+        user,
+    },
     services::{
-        append_timestamp,
+        append_timestamp, create_transfer_transaction,
+        error::EntityId,
         payment::dto::{
             create_payment_dto::CreatePaymentDto,
             payment_dto::{PaymentDto, PaymentInput},
@@ -21,9 +26,10 @@ use ::chrono::{DateTime, Utc, naive};
 use axum::extract::State;
 use convert_case::{Case, Casing};
 use sea_orm::{
-    ActiveValue::Set, EntityName, EntityTrait, TransactionTrait, prelude::DateTimeWithTimeZone,
-    sqlx::types::chrono,
+    ActiveValue::Set, ColumnTrait, EntityName, EntityTrait, QueryFilter, TransactionTrait,
+    prelude::DateTimeWithTimeZone, sqlx::types::chrono,
 };
+use uuid::Uuid;
 
 pub struct PaymentService;
 
@@ -34,7 +40,7 @@ impl PaymentService {
         let payment = Payment::find_by_id(id).one(state.db()).await?;
         payment.ok_or(ServiceError::EntityNotFound {
             entity: Self::TABLE,
-            id,
+            id: EntityId::Int(id),
         })
     }
 
@@ -50,6 +56,7 @@ impl PaymentService {
             amount: Set(create_payment_dto.amount),
             created_at: Set(Utc::now().naive_utc()),
             category: Set(create_payment_dto.category),
+            public_id: Set(Uuid::new_v4()),
             user_id: Set(user_id),
             ..Default::default()
         };
@@ -60,9 +67,33 @@ impl PaymentService {
         Ok(payment_link)
     }
 
-    pub async fn transfer(state: AppState, payment_id: String) {
+    pub async fn create_transfer(state: AppState, payment_id: i32) -> Result<String> {
         // Find the payment
+        let payment = Payment::find_by_id(payment_id).one(state.db()).await?;
         // validate the transfer (allowlist or other criteria's)
         // create transfer tx and transfer data in db and return to user
+        let transfer_transaction = create_transfer_transaction().await?;
+        // start watching reference key for transaction status
+        Ok(transfer_transaction)
+    }
+
+    pub async fn public_create_transfer(state: AppState, payment_id: String) -> Result<String> {
+        // Find the payment
+        let payment = Payment::find()
+            .filter(Column::PublicId.eq(&payment_id))
+            .one(state.db())
+            .await?;
+
+        if payment.is_none() {
+            return Err(ServiceError::EntityNotFound {
+                entity: Self::TABLE,
+                id: EntityId::Str(payment_id),
+            });
+        }
+        // validate the transfer (allowlist or other criteria's)
+        // create transfer tx and transfer data in db and return to user
+        let transfer_transaction = create_transfer_transaction().await?;
+        // start watching reference key for transaction status
+        Ok(transfer_transaction)
     }
 }

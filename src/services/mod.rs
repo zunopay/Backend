@@ -79,3 +79,7 @@ pub fn get_public_url(key: &String) -> String {
 
     url
 }
+
+pub async fn create_transfer_transaction() -> Result<String> {
+    todo!()
+}

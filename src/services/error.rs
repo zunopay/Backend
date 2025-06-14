@@ -11,9 +11,15 @@ use strum_macros::AsRefStr;
 
 pub type Result<T> = std::result::Result<T, ServiceError>;
 
+#[derive(Debug, Clone, AsRefStr)]
+pub enum EntityId {
+    Int(i32),
+    Str(String)
+}
+
 #[derive(Debug, AsRefStr, Clone)]
 pub enum ServiceError {
-    EntityNotFound { entity: &'static str, id: i32 },
+    EntityNotFound { entity: &'static str, id: EntityId },
     Database(String),
     UserNotFound,
     InvalidPassword,

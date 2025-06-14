@@ -3,6 +3,7 @@
 pub mod prelude;
 
 pub mod payment;
+pub mod referral_code;
 pub mod sea_orm_active_enums;
 pub mod transfer;
 pub mod user;

@@ -1,4 +1,4 @@
-use crate::db::entity::payment::PaymentCategory;
+use crate::db::entity::sea_orm_active_enums::PaymentCategory;
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
 
@@ -10,5 +10,5 @@ pub struct CreatePaymentDto {
 
     pub category: PaymentCategory,
 
-    pub amount: i64,
+    pub amount: i32,
 }

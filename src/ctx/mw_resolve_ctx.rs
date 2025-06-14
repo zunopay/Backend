@@ -2,7 +2,6 @@ use crate::{
     config,
     constants::AUTH_PREFIX,
     ctx::{Ctx, CtxResult},
-    db::entity::UserEntity,
     error::{Error, Result},
     services::{AppState, auth::dto::authorization_dto::Claims, user::UserService},
 };

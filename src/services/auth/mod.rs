@@ -3,8 +3,10 @@ pub mod dto;
 
 use crate::config;
 use crate::config::config;
-use crate::db::entity::user::Column;
-use crate::db::entity::{User, UserEntity, user};
+use crate::db::entity::{
+    prelude::User,
+    user::{self, Column, Model as UserModel},
+};
 use crate::services::auth::dto::authorization_dto::{AuthorizationDto, BasicUserPayload};
 use crate::services::auth::dto::login_dto::LoginDto;
 use crate::services::auth::dto::{authorization_dto::Claims, register_dto::RegisterDto};
@@ -42,9 +44,7 @@ impl AuthService {
             ..Default::default()
         };
 
-        let user = UserEntity::insert(data)
-            .exec_with_returning(state.db())
-            .await?;
+        let user = User::insert(data).exec_with_returning(state.db()).await?;
 
         let auth_token = Self::generate_auth_token(user).await?;
 
@@ -58,7 +58,7 @@ impl AuthService {
             Column::Username
         };
 
-        let user = UserEntity::find()
+        let user = User::find()
             .column(Column::Username)
             .one(state.db())
             .await?;
@@ -70,7 +70,7 @@ impl AuthService {
         Ok(AuthorizationDto { auth_token })
     }
 
-    pub async fn generate_auth_token(user: User) -> Result<String> {
+    pub async fn generate_auth_token(user: UserModel) -> Result<String> {
         let now = chrono::Utc::now();
         let claims = Claims {
             user: BasicUserPayload {
@@ -92,7 +92,7 @@ impl AuthService {
     }
 
     async fn check_email(email: &String, db: &DatabaseConnection) -> Result<()> {
-        let user = UserEntity::find()
+        let user = User::find()
             .filter(user::Column::Email.eq(email))
             .one(db)
             .await?;
@@ -105,7 +105,7 @@ impl AuthService {
     }
 
     async fn check_username(username: &String, db: &DatabaseConnection) -> Result<()> {
-        let user = UserEntity::find()
+        let user = User::find()
             .filter(user::Column::Username.eq(username))
             .one(db)
             .await?;

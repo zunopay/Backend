@@ -1,4 +1,4 @@
-use crate::db::entity::User;
+use crate::db::entity::user::Model as UserModel;
 use serde::Serialize;
 
 #[derive(Debug, Serialize, Clone)]
@@ -8,8 +8,8 @@ pub struct UserDto {
     email: String,
 }
 
-impl From<User> for UserDto {
-    fn from(value: User) -> Self {
+impl From<UserModel> for UserDto {
+    fn from(value: UserModel) -> Self {
         UserDto {
             id: value.id,
             username: value.username,

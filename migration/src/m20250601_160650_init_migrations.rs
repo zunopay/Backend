@@ -40,8 +40,8 @@ impl MigrationTrait for Migration {
         manager
             .create_type(
                 Type::create()
-                    .as_enum(Payment::PaymentCategory)
-                    .values(["OneTime"])
+                    .as_enum(PaymentCategory::Type)
+                    .values([PaymentCategory::OneTime])
                     .to_owned(),
             )
             .await?;
@@ -63,19 +63,26 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Payment::Description).string().not_null())
                     .col(
                         ColumnDef::new(Payment::Category)
-                            .custom(Payment::PaymentCategory)
+                            .custom(PaymentCategory::Type)
                             .not_null(),
                     )
                     .col(ColumnDef::new(Payment::Amount).integer().not_null())
                     .col(
                         ColumnDef::new(Payment::CreatedAt)
                             .not_null()
-                            .timestamp_with_time_zone()
+                            .date_time()
                             .default(Expr::current_timestamp()),
+                    )
+                    .col(
+                        ColumnDef::new(Payment::PublicId)
+                            .not_null()
+                            .uuid()
+                            .unique_key(),
                     )
                     .col(ColumnDef::new(Payment::UserId).not_null().integer())
                     .foreign_key(
                         ForeignKey::create()
+                            .name("fk_payment_user_id")
                             .from(Payment::Table, Payment::UserId)
                             .to(User::Table, User::Id)
                             .on_delete(ForeignKeyAction::Cascade),
@@ -89,7 +96,12 @@ impl MigrationTrait for Migration {
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .drop_foreign_key(ForeignKey::drop().table(Payment::Table).to_owned())
+            .drop_foreign_key(
+                ForeignKey::drop()
+                    .table(Payment::Table)
+                    .name("fk_payment_user_id")
+                    .to_owned(),
+            )
             .await?;
 
         manager
@@ -103,7 +115,7 @@ impl MigrationTrait for Migration {
         manager
             .drop_type(
                 Type::drop()
-                    .name(Payment::PaymentCategory)
+                    .name(PaymentCategory::Type)
                     .if_exists()
                     .to_owned(),
             )
@@ -127,11 +139,18 @@ enum User {
 enum Payment {
     Table,
     Id,
+    PublicId,
     Title,
     Description,
     Category,
     CreatedAt,
-    PaymentCategory,
     Amount,
     UserId,
+}
+
+#[derive(DeriveIden)]
+enum PaymentCategory {
+    #[sea_orm(iden = "payment_category")]
+    Type,
+    OneTime,
 }

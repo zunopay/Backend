@@ -1,10 +1,7 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use serde::Serialize;
 
-use crate::db::entity::{
-    Payment,
-    payment::{PaymentCategory, PaymentCategoryEnum},
-};
+use crate::db::entity::{payment::Model as PaymentModel, sea_orm_active_enums::PaymentCategory};
 
 #[derive(Serialize)]
 pub struct PaymentDto {
@@ -16,12 +13,12 @@ pub struct PaymentDto {
 
     pub category: PaymentCategory,
 
-    pub created_at: DateTime<Utc>,
+    pub created_at: NaiveDateTime,
 
-    pub amount: i64,
+    pub amount: i32,
 }
 
-pub type PaymentInput = Payment;
+pub type PaymentInput = PaymentModel;
 
 impl From<PaymentInput> for PaymentDto {
     fn from(value: PaymentInput) -> Self {

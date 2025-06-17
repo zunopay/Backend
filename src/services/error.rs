@@ -14,7 +14,12 @@ pub type Result<T> = std::result::Result<T, ServiceError>;
 #[derive(Debug, Clone, AsRefStr)]
 pub enum EntityId {
     Int(i32),
-    Str(String)
+    Str(String),
+}
+
+#[derive(Debug, AsRefStr, Clone)]
+pub enum MathErrorType {
+    NumericalOverflow,
 }
 
 #[derive(Debug, AsRefStr, Clone)]
@@ -31,6 +36,10 @@ pub enum ServiceError {
     PasswordHashError(argon2::password_hash::Error),
     ValidationError(validator::ValidationErrors),
     S3Error(String),
+    Web3Error(String),
+    SerializationError(String),
+    KeypairError(String),
+    MathError(MathErrorType),
 }
 
 impl std::fmt::Display for ServiceError {
@@ -93,6 +102,18 @@ impl From<validator::ValidationErrors> for ServiceError {
     }
 }
 
+impl From<bincode::Error> for ServiceError {
+    fn from(value: bincode::Error) -> Self {
+        Self::SerializationError(value.to_string())
+    }
+}
+
+impl From<solana_client::client_error::ClientError> for ServiceError {
+    fn from(value: solana_client::client_error::ClientError) -> Self {
+        Self::Web3Error(value.to_string())
+    }
+}
+
 /**
  * Convert each sdk error types: PutObjectError, GetObjectError ..
  * - All must implement Display + Send + Sync + 'static for thread safe and static lifetime
@@ -103,5 +124,17 @@ where
 {
     fn from(value: aws_sdk_s3::error::SdkError<E>) -> Self {
         Self::S3Error(value.to_string())
+    }
+}
+
+impl From<spl_token::solana_program::program_error::ProgramError> for ServiceError {
+    fn from(value: spl_token::solana_program::program_error::ProgramError) -> Self {
+        Self::Web3Error(value.to_string())
+    }
+}
+
+impl From<spl_associated_token_account::solana_program::pubkey::ParsePubkeyError> for ServiceError {
+    fn from(value: spl_associated_token_account::solana_program::pubkey::ParsePubkeyError) -> Self {
+        Self::Web3Error(value.to_string())
     }
 }

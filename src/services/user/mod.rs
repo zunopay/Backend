@@ -3,7 +3,8 @@ use sea_orm::EntityTrait;
 use crate::{
     db::entity::{prelude::User, user::Model as UserModel},
     services::{
-        error::{EntityId, Result, ServiceError}, AppState
+        AppState,
+        error::{EntityId, Result, ServiceError},
     },
 };
 

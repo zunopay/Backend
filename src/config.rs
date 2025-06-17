@@ -10,6 +10,9 @@ pub struct Config {
     pub AWS_ACCESS_KEY_ID: String,
     pub AWS_SECRET_ACCESS_KEY: String,
     pub AWS_BUCKET_REGION: String,
+    pub RPC_URL: String,
+    pub FEE_FAUCET_SECRET_KEY: String,
+    pub FEE_FAUCET_PRIVATE_KEY: String,
 }
 
 pub fn config() -> &'static Config {
@@ -32,6 +35,9 @@ impl Config {
             AWS_ACCESS_KEY_ID: get_var("SERVICE_AWS_ACCESS_KEY_ID")?,
             AWS_SECRET_ACCESS_KEY: get_var("SERVICE_AWS_SECRET_ACCESS_KEY")?,
             AWS_BUCKET_REGION: get_var("SERVICE_AWS_BUCKET_REGION")?,
+            RPC_URL: get_var("SERVICE_RPC_URL")?,
+            FEE_FAUCET_SECRET_KEY: get_var("SERVICE_FEE_FAUCET_SECRET_KEY")?,
+            FEE_FAUCET_PRIVATE_KEY: get_var("SERVICE_FEE_FAUCET_PRIVATE_KEY")?,
         };
 
         Ok(config)

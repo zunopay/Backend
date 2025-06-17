@@ -5,11 +5,14 @@ mod indexer;
 pub mod payment;
 pub mod s3;
 pub mod user;
+pub mod web3;
+
+use std::sync::Arc;
 
 use crate::{
     config::config,
     db,
-    services::{error::Result, s3::S3Service},
+    services::{error::Result, s3::S3Service, web3::Web3Service},
 };
 use argon2::{
     Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
@@ -20,13 +23,13 @@ use sea_orm::{
     Database, DatabaseConnection,
     sqlx::{Postgres, types::time},
 };
-use std::sync::Arc;
 
 //Cloning is cheap on DatabaseConnection
 #[derive(Clone)]
 pub struct AppState {
     db: DatabaseConnection,
     s3: Arc<S3Service>,
+    web3: Arc<Web3Service>,
 }
 
 impl AppState {
@@ -36,7 +39,9 @@ impl AppState {
         let s3 = S3Service::new().await;
         let s3 = Arc::new(s3);
 
-        Ok(AppState { db, s3 })
+        let web3 = Arc::new(Web3Service::new()?);
+
+        Ok(AppState { db, s3, web3 })
     }
 
     // Access db on in services
@@ -78,8 +83,4 @@ pub fn get_public_url(key: &String) -> String {
     );
 
     url
-}
-
-pub async fn create_transfer_transaction() -> Result<String> {
-    todo!()
 }

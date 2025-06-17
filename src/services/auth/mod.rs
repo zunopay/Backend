@@ -23,6 +23,13 @@ use validator::ValidateEmail;
 pub struct AuthService;
 
 impl AuthService {
+    /**
+     *
+     * TODO:
+     * 1. Oauth register and generate wallet
+     * 2. Oauth login
+     *
+     */
     pub async fn register(state: AppState, body: RegisterDto) -> Result<AuthorizationDto> {
         let username = body.username;
         let email = body.email;

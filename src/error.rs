@@ -16,6 +16,7 @@ pub enum Error {
     JwtError(jsonwebtoken::errors::Error),
     DatabaseError(Arc<sea_orm::error::DbErr>),
     ServiceError(String),
+    MiddlewareError(&'static str),
 }
 
 impl std::error::Error for Error {}

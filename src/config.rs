@@ -13,6 +13,8 @@ pub struct Config {
     pub RPC_URL: String,
     pub FEE_FAUCET_SECRET_KEY: String,
     pub FEE_FAUCET_PRIVATE_KEY: String,
+    pub GOOGLE_OAUTH_CLIENT_ID: String,
+    pub GOOGLE_OAUTH_CLIENT_SECRET: String,
 }
 
 pub fn config() -> &'static Config {
@@ -38,6 +40,8 @@ impl Config {
             RPC_URL: get_var("SERVICE_RPC_URL")?,
             FEE_FAUCET_SECRET_KEY: get_var("SERVICE_FEE_FAUCET_SECRET_KEY")?,
             FEE_FAUCET_PRIVATE_KEY: get_var("SERVICE_FEE_FAUCET_PRIVATE_KEY")?,
+            GOOGLE_OAUTH_CLIENT_ID: get_var("SERVICE_GOOGLE_CLIENT_ID")?,
+            GOOGLE_OAUTH_CLIENT_SECRET: get_var("SERVICE_GOOGLE_CLIENT_SECRET")?,
         };
 
         Ok(config)

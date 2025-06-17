@@ -10,5 +10,5 @@ pub struct CreatePaymentDto {
 
     pub category: PaymentCategory,
 
-    pub amount: i32,
+    pub amount: u64,
 }

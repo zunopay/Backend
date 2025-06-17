@@ -12,7 +12,7 @@ pub struct Model {
     pub title: String,
     pub description: String,
     pub category: PaymentCategory,
-    pub amount: i32,
+    pub amount: i64,
     pub created_at: DateTime,
     #[sea_orm(unique)]
     pub public_id: Uuid,

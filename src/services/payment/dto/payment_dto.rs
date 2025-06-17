@@ -15,7 +15,7 @@ pub struct PaymentDto {
 
     pub created_at: NaiveDateTime,
 
-    pub amount: i32,
+    pub amount: u64,
 }
 
 pub type PaymentInput = PaymentModel;
@@ -28,7 +28,7 @@ impl From<PaymentInput> for PaymentDto {
             description: value.description,
             category: value.category,
             created_at: value.created_at,
-            amount: value.amount,
+            amount: value.amount as u64, // amount will always be postitive
         }
     }
 }

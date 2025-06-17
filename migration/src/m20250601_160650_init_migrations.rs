@@ -74,7 +74,7 @@ impl MigrationTrait for Migration {
                             .custom(PaymentCategory::Type)
                             .not_null(),
                     )
-                    .col(ColumnDef::new(Payment::Amount).integer().not_null())
+                    .col(ColumnDef::new(Payment::Amount).big_unsigned().not_null())
                     .col(
                         ColumnDef::new(Payment::CreatedAt)
                             .not_null()

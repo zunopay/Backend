@@ -17,7 +17,7 @@ use crate::{
     },
     services::{
         append_timestamp,
-        error::EntityId,
+        error::{EntityId, MathErrorType},
         payment::dto::{
             create_payment_dto::CreatePaymentDto,
             create_transfer_dto::CreateTransferDto,
@@ -53,16 +53,18 @@ impl PaymentService {
         })
     }
 
-    //todo: payment id should be a uuid
     pub async fn create(
         state: AppState,
         user_id: i32,
         create_payment_dto: CreatePaymentDto,
     ) -> Result<PaymentInput> {
+        let amount = i64::try_from(create_payment_dto.amount)
+            .map_err(|_| ServiceError::MathError(MathErrorType::NumericalOverflow))?;
+
         let data = payment::ActiveModel {
             title: Set(create_payment_dto.title),
             description: Set(create_payment_dto.description),
-            amount: Set(create_payment_dto.amount),
+            amount: Set(amount),
             created_at: Set(Utc::now().naive_utc()),
             category: Set(create_payment_dto.category),
             public_id: Set(Uuid::new_v4()),
@@ -70,10 +72,10 @@ impl PaymentService {
             ..Default::default()
         };
 
-        let payment_link = Payment::insert(data)
+        let payment = Payment::insert(data)
             .exec_with_returning(state.db())
             .await?;
-        Ok(payment_link)
+        Ok(payment)
     }
 
     pub async fn create_transfer(
@@ -107,12 +109,15 @@ impl PaymentService {
 
         // validate the transfer (allowlist or other criteria's)
         // create transfer tx
+
+        let amount = u64::try_from(payment.amount)
+            .map_err(|_| ServiceError::MathError(MathErrorType::NumericalOverflow))?;
         let transfer_transaction = state
             .web3
             .create_transfer_transaction(
                 &sender_address,
                 &receiver_address,
-                payment.amount as u64, //todo: change the db amount to u64 or i64
+                amount,
                 &USDC_MINT.to_string(),
                 reference,
             )

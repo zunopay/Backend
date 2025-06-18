@@ -1,20 +1,24 @@
-use crate::services::{
-    AppState,
-    auth::{
-        AuthService,
-        auth_handler::{login, register},
+use crate::{
+    ctx::mw_resolve_google_ctx::mw_resolve_google_ctx,
+    services::{
+        AppState,
+        auth::{
+            AuthService,
+            auth_handler::{login, login_with_google, register},
+        },
     },
 };
 use axum::{
-    Router,
+    Router, middleware,
     routing::{patch, post},
 };
 
 pub fn routes(app_state: AppState) -> Router {
-    let router = Router::new()
-        .route("/register", post(register))
-        .route("/login", patch(login))
-        .with_state(app_state);
-
-    router
+    Router::new()
+        .route("/login-with-google", patch(login_with_google))
+        .layer(middleware::from_fn_with_state(
+            app_state.clone(),
+            mw_resolve_google_ctx,
+        ))
+        .with_state(app_state)
 }

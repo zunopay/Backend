@@ -29,3 +29,5 @@ pub fn validate_password(password: &String) -> Result<(), ValidationError> {
 
 pub const USDC_MINT: &'static str = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 pub const TREASURY_PUBKEY: &'static str = "7SMfVRrJw75vPzHCQ3ckUCT9igMRre8VHmodTbaVv4R";
+
+pub const GOOGLE_OAUTH_BASE_URL: &'static str = "https://oauth2.googleapis.com";

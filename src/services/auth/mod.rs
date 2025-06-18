@@ -23,13 +23,43 @@ use validator::ValidateEmail;
 pub struct AuthService;
 
 impl AuthService {
-    /**
-     *
-     * TODO:
-     * 1. Oauth register and generate wallet
-     * 2. Oauth login
-     *
-     */
+    pub async fn login_with_google(state: AppState, email: String) -> Result<AuthorizationDto> {
+        let user = User::find()
+            .filter(Column::Email.eq(&email))
+            .one(state.db())
+            .await?;
+
+        if let Some(val) = user {
+            let auth_token = Self::generate_auth_token(val).await?;
+
+            Ok(AuthorizationDto { auth_token })
+        } else {
+            Self::register_with_google(state, email).await
+        }
+    }
+
+    async fn register_with_google(state: AppState, email: String) -> Result<AuthorizationDto> {
+        let username = Self::generate_username();
+
+        let slug = append_timestamp(&username);
+        let s3_bucket_slug = Self::get_s3_bucket(slug);
+
+        let data = user::ActiveModel {
+            username: Set(username),
+            email: Set(email),
+            password: Set("".to_string()),
+            s3_bucket_slug: Set(s3_bucket_slug),
+            ..Default::default()
+        };
+
+        // todo: generate wallet and add in the table
+
+        let user = User::insert(data).exec_with_returning(state.db()).await?;
+        let auth_token = Self::generate_auth_token(user).await?;
+
+        Ok(AuthorizationDto { auth_token })
+    }
+
     pub async fn register(state: AppState, body: RegisterDto) -> Result<AuthorizationDto> {
         let username = body.username;
         let email = body.email;
@@ -126,5 +156,9 @@ impl AuthService {
 
     fn get_s3_bucket(user_slug: String) -> String {
         return format!("user/{}", user_slug);
+    }
+
+    fn generate_username() -> String {
+        todo!()
     }
 }

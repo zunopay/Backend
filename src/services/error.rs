@@ -40,6 +40,7 @@ pub enum ServiceError {
     SerializationError(String),
     KeypairError(String),
     MathError(MathErrorType),
+    ReqwestError(String),
 }
 
 impl std::fmt::Display for ServiceError {
@@ -111,6 +112,12 @@ impl From<bincode::Error> for ServiceError {
 impl From<solana_client::client_error::ClientError> for ServiceError {
     fn from(value: solana_client::client_error::ClientError) -> Self {
         Self::Web3Error(value.to_string())
+    }
+}
+
+impl From<reqwest::Error> for ServiceError {
+    fn from(value: reqwest::Error) -> Self {
+        Self::ReqwestError(value.to_string())
     }
 }
 

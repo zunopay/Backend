@@ -31,3 +31,4 @@ pub const USDC_MINT: &'static str = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1
 pub const TREASURY_PUBKEY: &'static str = "7SMfVRrJw75vPzHCQ3ckUCT9igMRre8VHmodTbaVv4R";
 
 pub const GOOGLE_OAUTH_BASE_URL: &'static str = "https://oauth2.googleapis.com";
+pub const PRIVY_BASE_URL: &'static str = "https://auth.privy.io/api";

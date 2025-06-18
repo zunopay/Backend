@@ -3,20 +3,24 @@ pub mod dto;
 
 use crate::config;
 use crate::config::config;
+use crate::constants::PRIVY_BASE_URL;
 use crate::db::entity::{
     prelude::User,
     user::{self, Column, Model as UserModel},
 };
 use crate::services::auth::dto::authorization_dto::{AuthorizationDto, BasicUserPayload};
 use crate::services::auth::dto::login_dto::LoginDto;
+use crate::services::auth::dto::wallet_dto::{PrivyUser, PrivyWallet};
 use crate::services::auth::dto::{authorization_dto::Claims, register_dto::RegisterDto};
 use crate::services::error::{Result, ServiceError};
 use crate::services::{AppState, append_timestamp, hash_password, verify_password};
 use axum::extract::State;
 use chrono;
 use jsonwebtoken::{EncodingKey, Header, encode};
+use reqwest::{Body, Client};
 use sea_orm::ActiveValue::Set;
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, Iden, QueryFilter, QuerySelect};
+use serde_json::json;
 use tokio::try_join;
 use validator::ValidateEmail;
 
@@ -44,15 +48,17 @@ impl AuthService {
         let slug = append_timestamp(&username);
         let s3_bucket_slug = Self::get_s3_bucket(slug);
 
+        let privy_wallet = Self::get_privy_user_by_email(&email).await?;
+        let wallet_address = privy_wallet.map(|val| val.address);
+
         let data = user::ActiveModel {
             username: Set(username),
             email: Set(email),
-            password: Set("".to_string()),
+            password: Set("".to_string()), // Empty password for oauth users
             s3_bucket_slug: Set(s3_bucket_slug),
+            wallet_address: Set(wallet_address),
             ..Default::default()
         };
-
-        // todo: generate wallet and add in the table
 
         let user = User::insert(data).exec_with_returning(state.db()).await?;
         let auth_token = Self::generate_auth_token(user).await?;
@@ -156,6 +162,19 @@ impl AuthService {
 
     fn get_s3_bucket(user_slug: String) -> String {
         return format!("user/{}", user_slug);
+    }
+
+    async fn get_privy_user_by_email(email: &String) -> Result<Option<PrivyWallet>> {
+        let client = Client::new();
+        let url = format!("{}/v1/users/email/address", PRIVY_BASE_URL);
+
+        let body = json!({"address": email});
+
+        let response = client.post(url).json(&body).send().await?;
+        let privy_user = response.json::<PrivyUser>().await?;
+
+        let wallet = privy_user.wallet;
+        Ok(wallet)
     }
 
     fn generate_username() -> String {

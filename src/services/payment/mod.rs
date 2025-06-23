@@ -1,6 +1,8 @@
 pub(crate) mod dto;
 mod payment_handler;
 
+use std::sync::Arc;
+
 use super::{
     AppState,
     error::{Result, ServiceError},
@@ -18,6 +20,7 @@ use crate::{
     services::{
         append_timestamp,
         error::{EntityId, MathErrorType},
+        indexer::Indexer,
         payment::dto::{
             create_payment_dto::CreatePaymentDto,
             create_transfer_dto::CreateTransferDto,
@@ -79,7 +82,7 @@ impl PaymentService {
     }
 
     pub async fn create_transfer(
-        state: AppState,
+        state: Arc<AppState>,
         create_transfer_dto: CreateTransferDto,
     ) -> Result<String> {
         let payment_id = create_transfer_dto.payment_id.to_string();
@@ -107,9 +110,9 @@ impl PaymentService {
         let reference = reference.pubkey();
         let reference_key = reference.to_string();
 
-        // validate the transfer (allowlist or other criteria's)
-        // create transfer tx
+        // todo: validate the transfer (allowlist or other criteria's)
 
+        // create transfer tx
         let amount = u64::try_from(payment.amount)
             .map_err(|_| ServiceError::MathError(MathErrorType::NumericalOverflow))?;
         let transfer_transaction = state
@@ -126,8 +129,9 @@ impl PaymentService {
         // save the transfer in db
         let transfer_data = TransferModel {
             payment_id: Set(payment.id),
-            reference_key: Set(reference_key),
+            reference_key: Set(reference_key.clone()),
             status: Set(TransferStatus::Pending),
+            sender_wallet_address: Set(sender_address),
             ..Default::default()
         };
 
@@ -135,7 +139,22 @@ impl PaymentService {
             .exec_with_returning(state.db())
             .await?;
 
-        // todo: start watching reference key for transaction status
+        // TODO: Use timer wheel algorithm for indexing
+        let mint = USDC_MINT;
+        tokio::spawn(async move {
+            let result = Indexer::poll_payment(
+                state,
+                reference_key,
+                receiver_address,
+                mint.to_string(),
+                amount,
+            )
+            .await;
+
+            if let Err(e) = result {
+                println!("poll_payment failed: {:?}", e); // or use tracing::error!
+            }
+        });
 
         let serialized_transaction = bincode::serialize(&transfer_transaction)?;
         let base64_transaction = base64::prelude::BASE64_STANDARD.encode(serialized_transaction);

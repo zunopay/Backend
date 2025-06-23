@@ -11,18 +11,25 @@ use strum_macros::AsRefStr;
 
 pub type Result<T> = std::result::Result<T, ServiceError>;
 
-#[derive(Debug, Clone, AsRefStr)]
+#[derive(Debug, Clone, AsRefStr, PartialEq)]
 pub enum EntityId {
     Int(i32),
     Str(String),
 }
 
-#[derive(Debug, AsRefStr, Clone)]
+#[derive(Debug, AsRefStr, Clone, PartialEq)]
 pub enum MathErrorType {
     NumericalOverflow,
 }
 
-#[derive(Debug, AsRefStr, Clone)]
+#[derive(Debug, AsRefStr, Clone, PartialEq)]
+pub enum Web3ErrorType {
+    ReferenceError,
+    ValidateTransferError(String),
+    Custom(String),
+}
+
+#[derive(Debug, AsRefStr, Clone, PartialEq)]
 pub enum ServiceError {
     EntityNotFound { entity: &'static str, id: EntityId },
     Database(String),
@@ -36,7 +43,7 @@ pub enum ServiceError {
     PasswordHashError(argon2::password_hash::Error),
     ValidationError(validator::ValidationErrors),
     S3Error(String),
-    Web3Error(String),
+    Web3Error(Web3ErrorType),
     SerializationError(String),
     KeypairError(String),
     MathError(MathErrorType),
@@ -111,7 +118,7 @@ impl From<bincode::Error> for ServiceError {
 
 impl From<solana_client::client_error::ClientError> for ServiceError {
     fn from(value: solana_client::client_error::ClientError) -> Self {
-        Self::Web3Error(value.to_string())
+        Self::Web3Error(Web3ErrorType::Custom(value.to_string()))
     }
 }
 
@@ -136,12 +143,12 @@ where
 
 impl From<spl_token::solana_program::program_error::ProgramError> for ServiceError {
     fn from(value: spl_token::solana_program::program_error::ProgramError) -> Self {
-        Self::Web3Error(value.to_string())
+        Self::Web3Error(Web3ErrorType::Custom(value.to_string()))
     }
 }
 
 impl From<spl_associated_token_account::solana_program::pubkey::ParsePubkeyError> for ServiceError {
     fn from(value: spl_associated_token_account::solana_program::pubkey::ParsePubkeyError) -> Self {
-        Self::Web3Error(value.to_string())
+        Self::Web3Error(Web3ErrorType::Custom(value.to_string()))
     }
 }

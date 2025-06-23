@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
+    pub sender_wallet_address: String,
     #[sea_orm(unique)]
     pub reference_key: String,
     pub payment_id: i32,

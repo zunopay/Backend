@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::{
     ctx::mw_resolve_google_ctx::mw_resolve_google_ctx,
     services::{
@@ -13,7 +15,7 @@ use axum::{
     routing::{patch, post},
 };
 
-pub fn routes(app_state: AppState) -> Router {
+pub fn routes(app_state: Arc<AppState>) -> Router {
     Router::new()
         .route("/login-with-google", patch(login_with_google))
         .layer(middleware::from_fn_with_state(

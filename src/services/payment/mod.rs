@@ -1,5 +1,5 @@
 pub(crate) mod dto;
-mod payment_handler;
+pub mod payment_handler;
 
 use std::sync::Arc;
 
@@ -48,7 +48,7 @@ pub struct PaymentService;
 impl PaymentService {
     const TABLE: &'static str = "Payment";
 
-    pub async fn find_one(state: AppState, id: i32) -> Result<PaymentInput> {
+    pub async fn find_one(state: Arc<AppState>, id: i32) -> Result<PaymentInput> {
         let payment = Payment::find_by_id(id).one(state.db()).await?;
         payment.ok_or(ServiceError::EntityNotFound {
             entity: Self::TABLE,
@@ -57,7 +57,7 @@ impl PaymentService {
     }
 
     pub async fn create(
-        state: AppState,
+        state: Arc<AppState>,
         user_id: i32,
         create_payment_dto: CreatePaymentDto,
     ) -> Result<PaymentInput> {

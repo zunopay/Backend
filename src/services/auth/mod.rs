@@ -1,6 +1,8 @@
 pub mod auth_handler;
 pub mod dto;
 
+use std::sync::Arc;
+
 use crate::config;
 use crate::config::config;
 use crate::constants::PRIVY_BASE_URL;
@@ -27,7 +29,10 @@ use validator::ValidateEmail;
 pub struct AuthService;
 
 impl AuthService {
-    pub async fn login_with_google(state: AppState, email: String) -> Result<AuthorizationDto> {
+    pub async fn login_with_google(
+        state: Arc<AppState>,
+        email: String,
+    ) -> Result<AuthorizationDto> {
         let user = User::find()
             .filter(Column::Email.eq(&email))
             .one(state.db())
@@ -42,7 +47,7 @@ impl AuthService {
         }
     }
 
-    async fn register_with_google(state: AppState, email: String) -> Result<AuthorizationDto> {
+    async fn register_with_google(state: Arc<AppState>, email: String) -> Result<AuthorizationDto> {
         let username = Self::generate_username();
 
         let slug = append_timestamp(&username);
@@ -66,7 +71,7 @@ impl AuthService {
         Ok(AuthorizationDto { auth_token })
     }
 
-    pub async fn register(state: AppState, body: RegisterDto) -> Result<AuthorizationDto> {
+    pub async fn register(state: Arc<AppState>, body: RegisterDto) -> Result<AuthorizationDto> {
         let username = body.username;
         let email = body.email;
 
@@ -94,7 +99,7 @@ impl AuthService {
         Ok(AuthorizationDto { auth_token })
     }
 
-    pub async fn login(state: AppState, body: LoginDto) -> Result<AuthorizationDto> {
+    pub async fn login(state: Arc<AppState>, body: LoginDto) -> Result<AuthorizationDto> {
         let column = if ValidateEmail::validate_email(&body.username_or_email) {
             Column::Email
         } else {

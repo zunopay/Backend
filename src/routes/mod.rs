@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::{
     ctx::{mw_require_auth::mw_require_auth, mw_resolve_ctx::mw_resolve_ctx},
     error::Result,
@@ -17,10 +19,9 @@ pub mod payment;
  */
 
 pub async fn routes() -> Result<Router> {
-    let app_state = AppState::new().await?;
+    let app_state = Arc::new(AppState::new().await?);
     let router = Router::new()
         .nest("/payment", payment::routes(app_state.clone()))
-        .layer(middleware::from_fn(mw_require_auth))
         .nest("/auth", auth::routes(app_state.clone()))
         .merge(app::routes())
         .layer(middleware::from_fn_with_state(app_state, mw_resolve_ctx))

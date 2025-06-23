@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{str::FromStr, sync::Arc};
 
 use crate::{
     config,
@@ -23,7 +23,7 @@ use reqwest::{Client, StatusCode, Url};
 use serde::Deserialize;
 
 pub async fn mw_resolve_google_ctx(
-    State(state): State<AppState>,
+    State(state): State<Arc<AppState>>,
     mut request: Request,
     next: Next,
 ) -> Result<Response> {

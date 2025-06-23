@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::{
     ctx::Ctx,
     services::{
@@ -5,7 +7,10 @@ use crate::{
         error::Result,
         payment::{
             PaymentService,
-            dto::{create_payment_dto::CreatePaymentDto, payment_dto::PaymentDto},
+            dto::{
+                create_payment_dto::CreatePaymentDto, create_transfer_dto::CreateTransferDto,
+                payment_dto::PaymentDto,
+            },
         },
     },
 };
@@ -16,7 +21,7 @@ use axum::{
 use serde_json::json;
 
 pub async fn find_one(
-    State(state): State<AppState>,
+    State(state): State<Arc<AppState>>,
     Path(id): Path<i32>,
 ) -> Result<Json<PaymentDto>> {
     let payment = PaymentService::find_one(state, id).await?;
@@ -24,10 +29,18 @@ pub async fn find_one(
 }
 
 pub async fn create(
-    State(state): State<AppState>,
+    State(state): State<Arc<AppState>>,
     ctx: Ctx,
     Json(create_payment_dto): Json<CreatePaymentDto>,
 ) -> Result<Json<PaymentDto>> {
     let payment_input = PaymentService::create(state, ctx.user_id, create_payment_dto).await?;
     Ok(Json(payment_input.into()))
+}
+
+pub async fn create_transfer(
+    State(state): State<Arc<AppState>>,
+    Json(create_transfer_dto): Json<CreateTransferDto>,
+) -> Result<String> {
+    let transfer_transaction = PaymentService::create_transfer(state, create_transfer_dto).await?;
+    Ok(transfer_transaction)
 }

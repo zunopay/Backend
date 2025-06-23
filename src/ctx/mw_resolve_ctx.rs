@@ -13,12 +13,12 @@ use axum::{
 };
 use jsonwebtoken::{DecodingKey, TokenData, Validation, decode};
 use sea_orm::EntityTrait;
-use std::string::ToString;
+use std::{string::ToString, sync::Arc};
 use tower_cookies::{Cookie, Cookies};
 
 #[axum::debug_middleware]
 pub async fn mw_resolve_ctx(
-    State(state): State<AppState>,
+    State(state): State<Arc<AppState>>,
     mut request: Request,
     next: Next,
 ) -> Result<Response> {
@@ -29,7 +29,7 @@ pub async fn mw_resolve_ctx(
     Ok(next.run(request).await)
 }
 
-async fn _mw_resolve_ctx(state: AppState, headers: HeaderMap) -> CtxResult {
+async fn _mw_resolve_ctx(state: Arc<AppState>, headers: HeaderMap) -> CtxResult {
     let token_str = headers
         .get(AUTHORIZATION)
         .ok_or(Error::MissingAuthToken)?

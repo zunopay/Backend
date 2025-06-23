@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::{
     ctx::GoogleCtx,
     services::{
@@ -15,7 +17,7 @@ use axum::{Json, extract::State};
 use validator::Validate;
 
 pub async fn login_with_google(
-    State(state): State<AppState>,
+    State(state): State<Arc<AppState>>,
     ctx: GoogleCtx,
 ) -> Result<Json<AuthorizationDto>> {
     let result = AuthService::login_with_google(state, ctx.email).await?;
@@ -23,7 +25,7 @@ pub async fn login_with_google(
 }
 
 pub async fn register(
-    State(state): State<AppState>,
+    State(state): State<Arc<AppState>>,
     Json(body): Json<RegisterDto>,
 ) -> Result<Json<AuthorizationDto>> {
     body.validate()?;
@@ -33,7 +35,7 @@ pub async fn register(
 }
 
 pub async fn login(
-    State(state): State<AppState>,
+    State(state): State<Arc<AppState>>,
     Json(body): Json<LoginDto>,
 ) -> Result<Json<AuthorizationDto>> {
     let result = AuthService::login(state, body).await?;

@@ -34,7 +34,7 @@ pub struct Web3Service {
 impl Web3Service {
     pub fn new() -> Result<Self> {
         let rpc_client = Arc::new(RpcClient::new(&config().RPC_URL));
-        let fee_faucet = Self::get_fee_faucet_keypair()?;
+        let fee_faucet = get_fee_faucet_keypair()?;
 
         Ok(Web3Service {
             rpc_client,
@@ -95,7 +95,7 @@ impl Web3Service {
             is_writable: false,
         });
 
-        let fee_faucet_pubkey = self.get_fee_faucet_pubkey();
+        let fee_faucet_pubkey = self.fee_faucet.pubkey();
         let mut transfer_transaction = Transaction::new_with_payer(
             &[transfer_fee_instruction, transfer_instruction],
             Some(&fee_faucet_pubkey),
@@ -169,22 +169,22 @@ impl Web3Service {
         })
     }
 
-    fn get_fee_faucet_pubkey(&self) -> Pubkey {
-        self.fee_faucet.pubkey()
-    }
-
-    fn get_fee_faucet_keypair() -> Result<Keypair> {
-        let secret_key = config().FEE_FAUCET_SECRET_KEY.as_bytes();
-        let private_key = config().FEE_FAUCET_PRIVATE_KEY.as_bytes();
-
-        let key = [private_key, secret_key].concat();
-        let keypair = Keypair::from_bytes(&key)
-            .map_err(|_| ServiceError::KeypairError("Failed to derive keypair".to_string()))?;
-
-        Ok(keypair)
-    }
-
     async fn sign_transaction(transaction: Transaction) -> Transaction {
         todo!()
     }
+}
+
+pub fn get_fee_faucet_pubkey() -> Result<Pubkey> {
+    Ok(get_fee_faucet_keypair()?.pubkey())
+}
+
+fn get_fee_faucet_keypair() -> Result<Keypair> {
+    let secret_key = config().FEE_FAUCET_SECRET_KEY.as_bytes();
+    let private_key = config().FEE_FAUCET_PRIVATE_KEY.as_bytes();
+
+    let key = [private_key, secret_key].concat();
+    let keypair = Keypair::from_bytes(&key)
+        .map_err(|_| ServiceError::KeypairError("Failed to derive keypair".to_string()))?;
+
+    Ok(keypair)
 }

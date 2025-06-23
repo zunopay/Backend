@@ -6,6 +6,7 @@ use crate::db::entity::{
     user::Model as UserModel,
 };
 use crate::services::error::MathErrorType;
+use crate::services::web3::get_fee_faucet_pubkey;
 use crate::services::{
     AppState,
     error::{Result, ServiceError, Web3ErrorType},
@@ -110,7 +111,7 @@ impl Indexer {
         mint: &Pubkey,
         amount: u64,
     ) -> Result<TransferStatus> {
-        //todo: amount check should be done after fee and also check the fee transfer instruction in validation.
+        //todo: can check transfer fee instruction, but validation handles by fee faucet signing for now
         let transaction_response =
             Self::validate_transfer(state, &status.signature, reference, receipt, mint, amount)
                 .await?;
@@ -148,6 +149,26 @@ impl Indexer {
                 .ok_or(ServiceError::Web3Error(
                     Web3ErrorType::ValidateTransferError("Not Found".to_string()),
                 ))?;
+
+        // Check if transaction fee payer is backend faucet
+        let expected_payer = get_fee_faucet_pubkey()?;
+        let payer =
+            transaction
+                .message
+                .static_account_keys()
+                .first()
+                .ok_or(ServiceError::Web3Error(
+                    Web3ErrorType::ValidateTransferError(
+                        "Missing payer, Invalid transfer".to_string(),
+                    ),
+                ))?;
+
+        let is_fee_faucet_payer = payer.eq(&expected_payer);
+        if !is_fee_faucet_payer {
+            return Err(ServiceError::Web3Error(
+                Web3ErrorType::ValidateTransferError("Invalid payer".to_string()),
+            ));
+        }
 
         let meta = response
             .transaction

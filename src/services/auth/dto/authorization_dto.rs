@@ -6,14 +6,14 @@ pub struct AuthorizationDto {
     // pub refresh_token: String (TODO)
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct BasicUserPayload {
     pub user_id: i32,
     pub username: String,
     pub email: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     #[serde(flatten)]
     pub user: BasicUserPayload,

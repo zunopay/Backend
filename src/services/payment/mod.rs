@@ -85,19 +85,19 @@ impl PaymentService {
         state: Arc<AppState>,
         create_transfer_dto: CreateTransferDto,
     ) -> Result<String> {
-        let payment_id = create_transfer_dto.payment_id.to_string();
+        let payment_id = create_transfer_dto.payment_id;
         let sender_address = create_transfer_dto.sender_address;
 
         // Find the payment
         let payment = Payment::find()
-            .filter(Column::PublicId.eq(&payment_id))
+            .filter(Column::PublicId.eq(payment_id.clone()))
             .find_also_related(user::Entity)
             .one(state.db())
             .await?;
 
         let (payment, user) = payment.ok_or(ServiceError::EntityNotFound {
             entity: Self::TABLE,
-            id: EntityId::Str(payment_id),
+            id: EntityId::Str(payment_id.to_string()),
         })?;
 
         let user = user.ok_or(ServiceError::UserNotFound)?;

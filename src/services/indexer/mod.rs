@@ -11,8 +11,11 @@ use crate::services::{
     AppState,
     error::{Result, ServiceError, Web3ErrorType},
 };
+use chrono::Utc;
 use sea_orm::ActiveValue::Set;
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
+use sea_orm::prelude::Expr;
+use sea_orm::sea_query::{ExprTrait, ValueType};
+use sea_orm::{ActiveEnum, ColumnTrait, EntityTrait, QueryFilter};
 use serde::Deserialize;
 use solana_client::rpc_response::RpcConfirmedTransactionStatusWithSignature;
 use solana_instruction::{AccountMeta, Instruction};
@@ -27,7 +30,7 @@ use spl_token::instruction::TokenInstruction;
 use spl_token::solana_program::pubkey::Pubkey;
 use std::str::FromStr;
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tokio::time::interval;
 use validator::{Validate, ValidateRange};
 
@@ -49,8 +52,19 @@ impl Indexer {
         mint: String,
         amount: u64,
     ) -> Result<()> {
+        let start_time = Instant::now();
+        let timeout = Duration::from_secs(60);
+
         let mut ticker = interval(Duration::from_secs(2));
+        let mut count = 0;
         let (status, signature) = loop {
+            count += 1;
+            println!("Polling payment {}", count);
+
+            if start_time.elapsed() >= timeout {
+                break Ok((TransferStatus::Rejected, None));
+            }
+
             ticker.tick().await;
             let status = state
                 .web3
@@ -75,20 +89,20 @@ impl Indexer {
                     )
                     .await?;
 
-                    break Ok((transfer_status, status.signature));
+                    break Ok((transfer_status, Some(status.signature)));
                 }
                 Err(ServiceError::Web3Error(Web3ErrorType::ReferenceError)) => continue,
                 Err(e) => break Err(e),
             }
         }?;
 
-        let transfer_data = transfer::ActiveModel {
-            signature: Set(Some(signature)),
-            status: Set((status)),
-            ..Default::default()
-        };
-
-        Transfer::update(transfer_data)
+        let enum_type_name = TransferStatus::enum_type_name().unwrap_or_else(|| "transfer_status");
+        Transfer::update_many()
+            .col_expr(transfer::Column::Signature, Expr::value(signature))
+            .col_expr(
+                transfer::Column::Status,
+                Expr::value(status).as_enum(enum_type_name),
+            )
             .filter(transfer::Column::ReferenceKey.eq(reference))
             .exec(state.db())
             .await?;

@@ -110,7 +110,7 @@ impl Web3Service {
         );
 
         let latest_blockhash = self.rpc_client.get_latest_blockhash()?;
-        transfer_transaction.sign(&[&self.fee_faucet], latest_blockhash);
+        transfer_transaction.partial_sign(&[&self.fee_faucet], latest_blockhash);
 
         // todo: check grid
 

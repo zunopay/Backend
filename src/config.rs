@@ -15,6 +15,8 @@ pub struct Config {
     pub FEE_FAUCET_PRIVATE_KEY: String,
     pub GOOGLE_OAUTH_CLIENT_ID: String,
     pub GOOGLE_OAUTH_CLIENT_SECRET: String,
+    pub PRIVY_APP_ID: String,
+    pub PRIVY_APP_SECRET: String,
 }
 
 pub fn config() -> &'static Config {
@@ -42,6 +44,8 @@ impl Config {
             FEE_FAUCET_PRIVATE_KEY: get_var("SERVICE_FEE_FAUCET_PRIVATE_KEY")?,
             GOOGLE_OAUTH_CLIENT_ID: get_var("SERVICE_GOOGLE_CLIENT_ID")?,
             GOOGLE_OAUTH_CLIENT_SECRET: get_var("SERVICE_GOOGLE_CLIENT_SECRET")?,
+            PRIVY_APP_ID: get_var("SERVICE_PRIVY_APP_ID")?,
+            PRIVY_APP_SECRET: get_var("SERVICE_PRIVY_APP_SECRET")?,
         };
 
         Ok(config)

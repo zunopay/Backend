@@ -17,6 +17,8 @@ use crate::services::auth::dto::{authorization_dto::Claims, register_dto::Regist
 use crate::services::error::{Result, ServiceError};
 use crate::services::{AppState, append_timestamp, hash_password, verify_password};
 use axum::extract::State;
+use base64::Engine;
+use base64::engine::general_purpose;
 use chrono;
 use jsonwebtoken::{EncodingKey, Header, encode};
 use reqwest::{Body, Client};
@@ -175,7 +177,19 @@ impl AuthService {
 
         let body = json!({"address": email});
 
-        let response = client.post(url).json(&body).send().await?;
+        let app_id = &config().PRIVY_APP_ID;
+        let credentials = format!("{}:{}", app_id, config().PRIVY_APP_SECRET);
+        let encoded_credentials = general_purpose::STANDARD.encode(credentials);
+
+        let response = client
+            .post(url)
+            .json(&body)
+            .header("Authorization", format!("Basic {}", encoded_credentials))
+            .header("privy-app-id", app_id)
+            .header("Content-Type", "application/json")
+            .send()
+            .await?;
+
         let privy_user = response.json::<PrivyUser>().await?;
 
         let wallet = privy_user.wallet;

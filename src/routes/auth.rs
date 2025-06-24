@@ -22,5 +22,7 @@ pub fn routes(app_state: Arc<AppState>) -> Router {
             app_state.clone(),
             mw_resolve_google_ctx,
         ))
+        .route("/register", post(register))
+        .route("/login", patch(login))
         .with_state(app_state)
 }

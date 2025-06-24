@@ -149,7 +149,11 @@ fn decode_keypair(private_key: &String, secret: &String) -> Result<Keypair> {
         ))
     })?;
 
-    let (nonce, wallet) = private_key_bytes.split_at(12);
+    let (nonce, wallet) = private_key_bytes
+        .split_at_checked(12)
+        .ok_or(ServiceError::Web3Error(error::Web3ErrorType::Custom(
+            "Invalid private key".to_string(),
+        )))?;
 
     let sha256_secret = Sha256::digest(secret_bytes);
     let cipher = Aes256Gcm::new_from_slice(&sha256_secret).map_err(|_| {

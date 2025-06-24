@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
-use axum::{body::Body, response::IntoResponse};
+use axum::{Json, body::Body, response::IntoResponse};
+use reqwest::StatusCode;
 use strum_macros::AsRefStr;
 
 use crate::services;
@@ -23,6 +24,7 @@ impl std::error::Error for Error {}
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        dbg!(self.clone());
         write!(f, "{}", &self.as_ref())
     }
 }
@@ -47,6 +49,10 @@ impl From<sea_orm::error::DbErr> for Error {
 
 impl IntoResponse for Error {
     fn into_response(self) -> axum::response::Response {
-        axum::response::Response::new(Body::from(self.to_string()))
+        dbg!(self.clone());
+        let status = StatusCode::BAD_REQUEST;
+        let body = Json(self.to_string());
+
+        (status, body).into_response()
     }
 }

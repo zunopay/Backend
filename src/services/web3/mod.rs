@@ -1,8 +1,16 @@
 use crate::{
     config::config,
     constants::TREASURY_PUBKEY,
-    services::error::{MathErrorType, Result, ServiceError},
+    services::{
+        decode_keypair,
+        error::{MathErrorType, Result, ServiceError},
+    },
 };
+use base64::{
+    Engine,
+    engine::{GeneralPurpose, general_purpose},
+};
+use sha2::{Digest, Sha256};
 use solana_client::{
     rpc_client::{GetConfirmedSignaturesForAddress2Config, RpcClient},
     rpc_response::RpcConfirmedTransactionStatusWithSignature,
@@ -179,12 +187,9 @@ pub fn get_fee_faucet_pubkey() -> Result<Pubkey> {
 }
 
 fn get_fee_faucet_keypair() -> Result<Keypair> {
-    let secret_key = config().FEE_FAUCET_SECRET_KEY.as_bytes();
-    let private_key = config().FEE_FAUCET_PRIVATE_KEY.as_bytes();
+    let secret = &config().FEE_FAUCET_SECRET;
+    let private_key = &config().FEE_FAUCET_PRIVATE_KEY;
 
-    let key = [private_key, secret_key].concat();
-    let keypair = Keypair::from_bytes(&key)
-        .map_err(|_| ServiceError::KeypairError("Failed to derive keypair".to_string()))?;
-
+    let keypair = decode_keypair(private_key, secret)?;
     Ok(keypair)
 }

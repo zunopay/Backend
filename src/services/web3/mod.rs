@@ -110,7 +110,13 @@ impl Web3Service {
         );
 
         let latest_blockhash = self.rpc_client.get_latest_blockhash()?;
-        transfer_transaction.partial_sign(&[&self.fee_faucet], latest_blockhash);
+        transfer_transaction
+            .try_partial_sign(&[&self.fee_faucet], latest_blockhash)
+            .map_err(|_| {
+                ServiceError::Web3Error(super::error::Web3ErrorType::Custom(
+                    "Partial signing failed".to_string(),
+                ))
+            })?;
 
         // todo: check grid
 

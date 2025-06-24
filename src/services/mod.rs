@@ -30,7 +30,6 @@ pub struct AppState {
     db: DatabaseConnection,
     s3: Arc<S3Service>,
     web3: Arc<Web3Service>,
-    indexer: Arc<Indexer>,
 }
 
 impl AppState {
@@ -41,14 +40,8 @@ impl AppState {
         let s3 = Arc::new(s3);
 
         let web3 = Arc::new(Web3Service::new()?);
-        let indexer = Arc::new(Indexer::new(2));
 
-        Ok(AppState {
-            db,
-            s3,
-            web3,
-            indexer,
-        })
+        Ok(AppState { db, s3, web3 })
     }
 
     // Access db on in services

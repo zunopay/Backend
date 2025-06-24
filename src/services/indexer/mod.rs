@@ -31,9 +31,7 @@ use std::time::Duration;
 use tokio::time::interval;
 use validator::{Validate, ValidateRange};
 
-pub struct Indexer {
-    pub duration: u64,
-}
+pub struct Indexer;
 
 pub struct TransferInstructionData {
     source: Pubkey,
@@ -43,10 +41,6 @@ pub struct TransferInstructionData {
 }
 
 impl Indexer {
-    pub fn new(duration: u64) -> Self {
-        Indexer { duration }
-    }
-
     // To spawn a thread for this function, all the futures in the function should be 'Send' as well.
     pub async fn poll_payment(
         state: Arc<AppState>,
@@ -55,7 +49,7 @@ impl Indexer {
         mint: String,
         amount: u64,
     ) -> Result<()> {
-        let mut ticker = interval(Duration::from_secs(1));
+        let mut ticker = interval(Duration::from_secs(2));
         let (status, signature) = loop {
             ticker.tick().await;
             let status = state

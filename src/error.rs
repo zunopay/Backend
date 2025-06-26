@@ -18,6 +18,7 @@ pub enum Error {
     DatabaseError(Arc<sea_orm::error::DbErr>),
     ServiceError(String),
     MiddlewareError(&'static str),
+    FailedToBindListener { port: i32, e: String },
 }
 
 impl std::error::Error for Error {}

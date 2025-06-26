@@ -1,4 +1,6 @@
-use std::sync::Arc;
+pub mod app;
+pub mod auth;
+pub mod payment;
 
 use crate::{
     ctx::{mw_require_auth::mw_require_auth, mw_resolve_ctx::mw_resolve_ctx},
@@ -6,17 +8,8 @@ use crate::{
     services::AppState,
 };
 use axum::{Extension, Router, middleware};
+use std::sync::Arc;
 use tower_cookies::CookieManagerLayer;
-
-pub mod app;
-pub mod auth;
-pub mod payment;
-
-/*
- *
- *  User serde::Deserialize and validator crate for Params and Body
- *
- */
 
 pub async fn routes() -> Result<Router> {
     let app_state = Arc::new(AppState::new().await?);

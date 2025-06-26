@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use crate::{
     ctx::mw_resolve_google_ctx::mw_resolve_google_ctx,
     services::{
@@ -14,6 +12,7 @@ use axum::{
     Router, middleware,
     routing::{patch, post},
 };
+use std::sync::Arc;
 
 pub fn routes(app_state: Arc<AppState>) -> Router {
     Router::new()

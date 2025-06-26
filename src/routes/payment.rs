@@ -19,8 +19,3 @@ pub fn routes(app_state: Arc<AppState>) -> Router {
         .route("/create-transfer", post(create_transfer))
         .with_state(app_state)
 }
-
-/*
- * 1. Payment directly on the website
- * 2. Payment gateway integeration with the client website
- */

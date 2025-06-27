@@ -8,7 +8,7 @@ use super::{
     error::{Result, ServiceError},
 };
 use crate::{
-    constants::USDC_MINT,
+    constants::{BASE_USDC, USDC_MINT},
     ctx::Ctx,
     db::entity::{
         payment::{self, Column},
@@ -53,6 +53,18 @@ impl PaymentService {
         payment.ok_or(ServiceError::EntityNotFound {
             entity: Self::TABLE,
             id: EntityId::Int(id),
+        })
+    }
+
+    pub async fn public_find_one(state: Arc<AppState>, public_id: Uuid) -> Result<PaymentInput> {
+        let payment = Payment::find()
+            .filter(payment::Column::PublicId.eq(public_id))
+            .one(state.db())
+            .await?;
+
+        payment.ok_or(ServiceError::EntityNotFound {
+            entity: Self::TABLE,
+            id: EntityId::Str(public_id.to_string()),
         })
     }
 
@@ -115,6 +127,11 @@ impl PaymentService {
         // create transfer tx
         let amount = u64::try_from(payment.amount)
             .map_err(|_| ServiceError::MathError(MathErrorType::NumericalOverflow))?;
+
+        let amount = amount
+            .checked_mul(BASE_USDC)
+            .ok_or(ServiceError::MathError(MathErrorType::NumericalOverflow))?;
+
         let transfer_transaction = state
             .web3
             .create_transfer_transaction(

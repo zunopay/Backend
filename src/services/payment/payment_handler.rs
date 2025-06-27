@@ -19,12 +19,21 @@ use axum::{
     extract::{Multipart, Path, State},
 };
 use serde_json::json;
+use uuid::Uuid;
 
 pub async fn find_one(
     State(state): State<Arc<AppState>>,
     Path(id): Path<i32>,
 ) -> Result<Json<PaymentDto>> {
     let payment = PaymentService::find_one(state, id).await?;
+    Ok(Json(payment.into()))
+}
+
+pub async fn public_find_one(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+) -> Result<Json<PaymentDto>> {
+    let payment = PaymentService::public_find_one(state, id).await?;
     Ok(Json(payment.into()))
 }
 

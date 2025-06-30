@@ -26,6 +26,7 @@ pub enum MathErrorType {
 pub enum Web3ErrorType {
     ReferenceError,
     ValidateTransferError(String),
+    InvalidSigner,
     Custom(String),
 }
 

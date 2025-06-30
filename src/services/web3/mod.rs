@@ -1,3 +1,4 @@
+use super::error::Web3ErrorType;
 use crate::{
     config::config,
     constants::TREASURY_PUBKEY,
@@ -20,7 +21,9 @@ use solana_message::Message;
 use solana_signature::Signature;
 use solana_signer::Signer;
 use solana_transaction::Transaction;
-use spl_associated_token_account::get_associated_token_address;
+use spl_associated_token_account::{
+    get_associated_token_address, solana_program::example_mocks::solana_sdk::transaction,
+};
 use spl_token::{
     ID as TOKEN_PROGRAM_ID,
     instruction::transfer,
@@ -123,6 +126,12 @@ impl Web3Service {
         Ok(transfer_transaction)
     }
 
+    pub async fn send_and_confirm_transaction(&self, transaction: &Transaction) -> Result<String> {
+        let signature = self.rpc_client.send_and_confirm_transaction(transaction)?;
+
+        Ok(signature.to_string())
+    }
+
     /**
      * For recursive function, rust compiler is not able to calculate the size of return type due to function calling itself probably infinite times
      * So we use `dyn Future`, returning heap allocated Future (dyn to calculate size on runtime, Box to allocate on heap)
@@ -182,10 +191,67 @@ impl Web3Service {
             }
         })
     }
+}
 
-    async fn sign_transaction(transaction: Transaction) -> Transaction {
-        todo!()
+pub fn get_reference_from_transfer_transaction(transaction: &Transaction) -> Result<Pubkey> {
+    use super::error::{ServiceError, Web3ErrorType};
+
+    let transfer_instruction = transaction
+        .message
+        .instructions
+        .last()
+        .ok_or(ServiceError::Web3Error(Web3ErrorType::ReferenceError))?;
+
+    // Reference key is the last account in the instruction
+    let reference_key_index = transfer_instruction
+        .accounts
+        .last()
+        .ok_or(ServiceError::Web3Error(Web3ErrorType::ReferenceError))?;
+
+    let reference_pubkey = transaction
+        .message
+        .account_keys
+        .get(*reference_key_index as usize)
+        .ok_or(ServiceError::Web3Error(Web3ErrorType::ReferenceError))?
+        .clone();
+
+    Ok(reference_pubkey)
+}
+
+pub fn verify_transaction_signature(transaction: &Transaction, wallet: &Pubkey) -> Result<()> {
+    transaction.verify().map_err(|_| {
+        ServiceError::Web3Error(Web3ErrorType::Custom(
+            "Invalid signature in transaction".to_string(),
+        ))
+    })?;
+
+    let is_wallet_signer = transaction
+        .message
+        .signer_keys()
+        .iter()
+        .any(|key| key.eq(&wallet));
+
+    if !is_wallet_signer {
+        return Err(ServiceError::Web3Error(Web3ErrorType::InvalidSigner));
     }
+
+    Ok(())
+}
+
+pub fn deserialize_transaction(encoded_tx: &str) -> Result<Transaction> {
+    let transaction_bytes = general_purpose::STANDARD.decode(encoded_tx).map_err(|_| {
+        ServiceError::Web3Error(Web3ErrorType::Custom(
+            "Invalid base64 transaction".to_string(),
+        ))
+    })?;
+
+    let transaction: Transaction = bincode::deserialize(&transaction_bytes).map_err(|_| {
+        ServiceError::Web3Error(Web3ErrorType::Custom(
+            "Failed to deserialize transaction".to_string(),
+        ))
+    })?;
+
+    Ok(transaction)
 }
 
 pub fn get_fee_faucet_pubkey() -> Result<Pubkey> {

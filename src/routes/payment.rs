@@ -1,5 +1,7 @@
 use crate::ctx::mw_require_auth::mw_require_auth;
-use crate::services::payment::payment_handler::{create, create_transfer, find_one};
+use crate::services::payment::payment_handler::{
+    create, create_transfer, find_one, submit_transfer,
+};
 use crate::{error::Result, services::AppState};
 use axum::middleware;
 use axum::{
@@ -17,5 +19,6 @@ pub fn routes(app_state: Arc<AppState>) -> Router {
         ))
         .route("/get/{id}", get(find_one))
         .route("/create-transfer", post(create_transfer))
+        .route("/submit-transfer", post(submit_transfer))
         .with_state(app_state)
 }

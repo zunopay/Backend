@@ -3,6 +3,7 @@ use chrono::{DateTime, Utc};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreatePaymentDto {
     pub title: String,
 

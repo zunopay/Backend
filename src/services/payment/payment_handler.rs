@@ -9,7 +9,7 @@ use crate::{
             PaymentService,
             dto::{
                 create_payment_dto::CreatePaymentDto, create_transfer_dto::CreateTransferDto,
-                payment_dto::PaymentDto,
+                payment_dto::PaymentDto, submit_transfer_dto::SubmitTransferDto,
             },
         },
     },
@@ -52,4 +52,12 @@ pub async fn create_transfer(
 ) -> Result<String> {
     let transfer_transaction = PaymentService::create_transfer(state, create_transfer_dto).await?;
     Ok(transfer_transaction)
+}
+
+pub async fn submit_transfer(
+    State(state): State<Arc<AppState>>,
+    Json(submit_transfer_dto): Json<SubmitTransferDto>,
+) -> Result<()> {
+    PaymentService::submit_transfer(state, submit_transfer_dto).await?;
+    Ok(())
 }

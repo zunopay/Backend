@@ -1,5 +1,6 @@
 use chrono::{DateTime, NaiveDateTime, Utc};
 use serde::Serialize;
+use uuid::Uuid;
 
 use crate::db::entity::{payment::Model as PaymentModel, sea_orm_active_enums::PaymentCategory};
 
@@ -7,6 +8,8 @@ use crate::db::entity::{payment::Model as PaymentModel, sea_orm_active_enums::Pa
 #[serde(rename_all = "camelCase")]
 pub struct PaymentDto {
     pub id: i32,
+
+    pub public_id: Uuid,
 
     pub title: String,
 
@@ -25,6 +28,7 @@ impl From<PaymentInput> for PaymentDto {
     fn from(value: PaymentInput) -> Self {
         PaymentDto {
             id: value.id,
+            public_id: value.public_id,
             title: value.title,
             description: value.description,
             category: value.category,

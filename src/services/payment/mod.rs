@@ -185,7 +185,7 @@ impl PaymentService {
             .inner_join(Transfer)
             .filter(payment::Column::PublicId.eq(public_id))
             .filter(transfer::Column::ReferenceKey.eq(&reference))
-            .find_also_related(Transfer)
+            .select_also(Transfer)
             .one(state.db())
             .await?
             .ok_or(ServiceError::Web3Error(Web3ErrorType::Custom(format!(
@@ -215,21 +215,15 @@ impl PaymentService {
             .send_and_confirm_transaction(&transaction)
             .await?;
 
-        {
-            use sea_orm::sea_query::ValueType;
-            let enum_type_name =
-                TransferStatus::enum_type_name().unwrap_or_else(|| "transfer_status");
-
-            Transfer::update_many()
-                .col_expr(transfer::Column::Signature, Expr::value(signature))
-                .col_expr(
-                    transfer::Column::Status,
-                    Expr::value(TransferStatus::Completed).as_enum(enum_type_name),
-                )
-                .filter(transfer::Column::ReferenceKey.eq(&reference))
-                .exec(state.db())
-                .await?;
-        }
+        Transfer::update_many()
+            .col_expr(transfer::Column::Signature, Expr::value(signature))
+            .col_expr(
+                transfer::Column::Status,
+                Expr::value(TransferStatus::Completed).as_enum("transfer_status"),
+            )
+            .filter(transfer::Column::ReferenceKey.eq(&reference))
+            .exec(state.db())
+            .await?;
 
         Ok(())
     }

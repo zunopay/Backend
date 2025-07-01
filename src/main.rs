@@ -33,13 +33,19 @@ use tower_http::{
     trace::{DefaultMakeSpan, DefaultOnResponse, Trace, TraceLayer},
 };
 use tracing::Level;
-use tracing_subscriber::EnvFilter;
+use tracing_subscriber::{EnvFilter, fmt};
 
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from_default_env())
+        .with_env_filter("info")
+        .pretty()
+        .with_line_number(true)
+        .with_target(false)
+        .with_level(true)
         .init();
+
+    color_eyre::install().unwrap();
 
     //todo: add X-API-KEY header when start using it
     //CORS layer
@@ -79,11 +85,11 @@ async fn main() -> Result<()> {
         .layer(TimeoutLayer::new(Duration::from_secs(30)))
         .layer(CatchPanicLayer::new());
 
-    let port = 8000;
+    let port = &config::config().PORT;
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
         .await
         .map_err(|e| Error::FailedToBindListener {
-            port,
+            port: &port,
             e: e.to_string(),
         })?;
 
@@ -91,7 +97,7 @@ async fn main() -> Result<()> {
         .with_graceful_shutdown(shutdown_signal())
         .await
         .map_err(|e| Error::FailedToBindListener {
-            port,
+            port: &port,
             e: e.to_string(),
         })?;
 

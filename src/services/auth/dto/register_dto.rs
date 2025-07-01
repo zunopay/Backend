@@ -3,6 +3,7 @@ use serde::Deserialize;
 use validator::Validate;
 
 #[derive(Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
 pub struct RegisterDto {
     #[validate(email)]
     pub email: String,

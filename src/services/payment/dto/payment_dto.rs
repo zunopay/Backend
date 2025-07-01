@@ -4,6 +4,7 @@ use serde::Serialize;
 use crate::db::entity::{payment::Model as PaymentModel, sea_orm_active_enums::PaymentCategory};
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PaymentDto {
     pub id: i32,
 

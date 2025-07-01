@@ -4,6 +4,7 @@ use crate::error::{Error, Result};
 
 #[allow(non_snake_case)]
 pub struct Config {
+    pub PORT: String,
     pub DB_URL: String,
     pub ACCESS_SECRET_KEY: String,
     pub AWS_BUCKET_NAME: String,
@@ -33,6 +34,7 @@ pub fn config() -> &'static Config {
 impl Config {
     pub fn load_env() -> Result<Config> {
         let config = Config {
+            PORT: get_var("PORT")?,
             DB_URL: get_var("SERVICE_DB_URL")?,
             ACCESS_SECRET_KEY: get_var("SERVICE_ACCESS_SECRET_KEY")?,
             AWS_BUCKET_NAME: get_var("SERVICE_AWS_BUCKET_NAME")?,

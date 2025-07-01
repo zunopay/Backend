@@ -7,6 +7,7 @@ pub struct AuthorizationDto {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct BasicUserPayload {
     pub user_id: i32,
     pub username: String,
@@ -14,6 +15,7 @@ pub struct BasicUserPayload {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Claims {
     #[serde(flatten)]
     pub user: BasicUserPayload,
@@ -22,6 +24,7 @@ pub struct Claims {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GoogleClaims {
     pub iss: String,
     pub sub: String,

@@ -2,6 +2,7 @@ use crate::db::entity::user::Model as UserModel;
 use serde::Serialize;
 
 #[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct UserDto {
     id: i32,
     username: String,

@@ -47,8 +47,8 @@ impl S3Service {
 
     pub async fn upload_file(
         &self,
-        s3_folder: String,
-        file: Bytes,
+        s3_folder: &String,
+        file: &Bytes,
         filename: Option<String>,
     ) -> Result<String> {
         let kind = infer::get(&file);

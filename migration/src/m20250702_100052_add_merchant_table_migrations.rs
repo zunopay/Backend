@@ -33,7 +33,12 @@ impl MigrationTrait for Migration {
                             .boolean()
                             .default(false),
                     )
-                    .col(ColumnDef::new(Merchant::UserId).integer().not_null().unique_key())
+                    .col(
+                        ColumnDef::new(Merchant::UserId)
+                            .integer()
+                            .not_null()
+                            .unique_key(),
+                    )
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_merchant_user_id")

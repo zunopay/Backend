@@ -13,7 +13,9 @@ pub struct CreateMerchantProfileDto {
  */
 
 // Multipart limits the default file size to 2MB
-pub async fn from_multipart_to_dto(mut form: Multipart) -> Result<CreateMerchantProfileDto> {
+pub async fn from_multipart_to_create_merchant_profle_dto(
+    mut form: Multipart,
+) -> Result<CreateMerchantProfileDto> {
     let mut display_name: Option<String> = None;
     let mut address: Option<String> = None;
     let mut business_registration_number: Option<String> = None;

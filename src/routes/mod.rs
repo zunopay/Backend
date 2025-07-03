@@ -1,6 +1,7 @@
 pub mod app;
 pub mod auth;
 pub mod payment;
+pub mod user;
 
 use crate::{
     ctx::{mw_require_auth::mw_require_auth, mw_resolve_ctx::mw_resolve_ctx},

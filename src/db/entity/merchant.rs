@@ -15,7 +15,7 @@ pub struct Model {
     pub address: String,
     pub s3_bucket_slug: String,
     pub business_registration_number: Option<String>,
-    pub is_verified: Option<bool>,
+    pub is_verified: bool,
     #[sea_orm(unique)]
     pub user_id: i32,
 }

@@ -31,6 +31,7 @@ impl MigrationTrait for Migration {
                     .col(
                         ColumnDef::new(Merchant::IsVerified)
                             .boolean()
+                            .not_null()
                             .default(false),
                     )
                     .col(

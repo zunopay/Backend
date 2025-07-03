@@ -1,7 +1,6 @@
+pub mod dto;
+pub mod user_handler;
 use std::sync::Arc;
-
-use convert_case::{Case, Casing};
-use sea_orm::{ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter};
 
 use crate::{
     ctx::Ctx,
@@ -16,8 +15,8 @@ use crate::{
         user::dto::create_merchant_profile_dto::CreateMerchantProfileDto,
     },
 };
-
-pub mod dto;
+use convert_case::{Case, Casing};
+use sea_orm::{ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter};
 
 pub struct UserService;
 

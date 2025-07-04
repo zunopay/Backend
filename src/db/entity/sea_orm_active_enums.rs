@@ -4,6 +4,16 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize)]
+#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "merchant_category")]
+pub enum MerchantCategory {
+    #[sea_orm(string_value = "restaurant")]
+    Restaurant,
+    #[sea_orm(string_value = "grocerries")]
+    Grocerries,
+    #[sea_orm(string_value = "other")]
+    Other,
+}
+#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize)]
 #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "payment_category")]
 pub enum PaymentCategory {
     #[sea_orm(string_value = "one_time")]

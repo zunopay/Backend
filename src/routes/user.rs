@@ -18,8 +18,8 @@ pub fn routes(app_state: Arc<AppState>) -> Router {
             app_state.clone(),
             mw_require_auth,
         ))
-        .route("/get/merchant/{slug}", get(find_merchant))
-        .route("/get/merchants", get(find_all_merchants))
-        .route("/merchant/create-profile", post(create_merchant_profile))
+        .route("/get-merchant/{slug}", get(find_merchant))
+        .route("/get-merchant", get(find_all_merchants))
+        .route("/merchant-profile", post(create_merchant_profile))
         .with_state(app_state)
 }

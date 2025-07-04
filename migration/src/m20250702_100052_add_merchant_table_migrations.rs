@@ -1,4 +1,4 @@
-use sea_orm_migration::prelude::*;
+use sea_orm_migration::prelude::{extension::postgres::Type, *};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -6,6 +6,19 @@ pub struct Migration;
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager
+            .create_type(
+                Type::create()
+                    .as_enum(MerchantCategory::Type)
+                    .values([
+                        MerchantCategory::Restaurant,
+                        MerchantCategory::Grocerries,
+                        MerchantCategory::Other,
+                    ])
+                    .to_owned(),
+            )
+            .await?;
+
         manager
             .create_table(
                 Table::create()
@@ -26,6 +39,11 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(Merchant::Cover).string())
                     .col(ColumnDef::new(Merchant::Address).string().not_null())
+                    .col(
+                        ColumnDef::new(Merchant::Category)
+                            .custom(MerchantCategory::Type)
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(Merchant::S3BucketSlug).string().not_null())
                     .col(ColumnDef::new(Merchant::BusinessRegistrationNumber).string())
                     .col(
@@ -57,6 +75,16 @@ impl MigrationTrait for Migration {
         manager
             .drop_table(Table::drop().table(Merchant::Table).if_exists().to_owned())
             .await?;
+
+        manager
+            .drop_type(
+                Type::drop()
+                    .if_exists()
+                    .name(MerchantCategory::Type)
+                    .to_owned(),
+            )
+            .await?;
+
         Ok(())
     }
 }
@@ -73,6 +101,16 @@ enum Merchant {
     BusinessRegistrationNumber,
     IsVerified,
     UserId,
+    Category,
+}
+
+#[derive(DeriveIden)]
+enum MerchantCategory {
+    #[sea_orm(iden = "merchant_category")]
+    Type,
+    Restaurant,
+    Grocerries,
+    Other,
 }
 
 #[derive(DeriveIden)]

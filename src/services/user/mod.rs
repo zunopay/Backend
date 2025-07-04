@@ -75,6 +75,7 @@ impl UserService {
             business_registration_number: Set(
                 create_merchant_profile_dto.business_registration_number
             ),
+            category: Set(create_merchant_profile_dto.category),
             slug: Set(slug),
             s3_bucket_slug: Set(s3_bucket_slug),
             cover: Set(cover),

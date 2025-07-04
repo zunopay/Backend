@@ -2,14 +2,22 @@
 
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
+use strum_macros::EnumString;
 
-#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize, EnumString,
+)]
 #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "merchant_category")]
 pub enum MerchantCategory {
+    #[strum(serialize = "restaurant", ascii_case_insensitive)]
     #[sea_orm(string_value = "restaurant")]
     Restaurant,
+
+    #[strum(serialize = "grocerries", ascii_case_insensitive)]
     #[sea_orm(string_value = "grocerries")]
     Grocerries,
+
+    #[strum(serialize = "other", ascii_case_insensitive)]
     #[sea_orm(string_value = "other")]
     Other,
 }

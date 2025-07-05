@@ -10,8 +10,6 @@ pub struct Model {
     pub id: i32,
     #[sea_orm(unique)]
     pub email: String,
-    #[sea_orm(unique)]
-    pub username: String,
     pub password: String,
     pub wallet_address: Option<String>,
     pub created_at: DateTime,

@@ -23,7 +23,9 @@ use chrono;
 use jsonwebtoken::{EncodingKey, Header, encode};
 use reqwest::{Body, Client};
 use sea_orm::ActiveValue::Set;
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, Iden, QueryFilter, QuerySelect};
+use sea_orm::{
+    ColumnTrait, DatabaseConnection, EntityTrait, Iden, QueryFilter, QuerySelect, SelectColumns,
+};
 use serde_json::json;
 use tokio::try_join;
 use validator::ValidateEmail;
@@ -50,16 +52,19 @@ impl AuthService {
     }
 
     async fn register_with_google(state: Arc<AppState>, email: String) -> Result<AuthorizationDto> {
-        let username = Self::generate_username();
+        let name = email
+            .split('@')
+            .next()
+            .ok_or(ServiceError::Custom("Invalid email".to_string()))?
+            .to_string();
 
-        let slug = append_timestamp(&username);
+        let slug = append_timestamp(&name);
         let s3_bucket_slug = Self::get_s3_bucket(slug);
 
         let privy_wallet = Self::get_privy_user_by_email(&email).await?;
         let wallet_address = privy_wallet.map(|val| val.address);
 
         let data = user::ActiveModel {
-            username: Set(username),
             email: Set(email),
             password: Set("".to_string()), // Empty password for oauth users
             s3_bucket_slug: Set(s3_bucket_slug),
@@ -74,20 +79,21 @@ impl AuthService {
     }
 
     pub async fn register(state: Arc<AppState>, body: RegisterDto) -> Result<AuthorizationDto> {
-        let username = body.username;
         let email = body.email;
 
-        try_join!(
-            Self::check_email(&email, state.db()),
-            Self::check_username(&username, state.db())
-        )?;
+        Self::check_email(&email, state.db()).await?;
 
-        let slug = append_timestamp(&username);
+        let name = email
+            .split('@')
+            .next()
+            .ok_or(ServiceError::Custom("Invalid email".to_string()))?
+            .to_string();
+
+        let slug = append_timestamp(&name);
         let s3_bucket_slug = Self::get_s3_bucket(slug);
 
         let hashed_password = hash_password(body.password)?;
         let data = user::ActiveModel {
-            username: Set(username),
             email: Set(email),
             password: Set(hashed_password),
             s3_bucket_slug: Set(s3_bucket_slug),
@@ -102,14 +108,8 @@ impl AuthService {
     }
 
     pub async fn login(state: Arc<AppState>, body: LoginDto) -> Result<AuthorizationDto> {
-        let column = if ValidateEmail::validate_email(&body.username_or_email) {
-            Column::Email
-        } else {
-            Column::Username
-        };
-
         let user = User::find()
-            .column(Column::Username)
+            .filter(Column::Email.eq(body.email))
             .one(state.db())
             .await?;
 
@@ -126,7 +126,6 @@ impl AuthService {
             user: BasicUserPayload {
                 user_id: user.id,
                 email: user.email,
-                username: user.username,
             },
             iat: now.timestamp() as usize,
             exp: (now + chrono::Duration::days(7)).timestamp() as usize,
@@ -151,19 +150,6 @@ impl AuthService {
             Ok(())
         } else {
             return Err(ServiceError::EmailAlreadyExists);
-        }
-    }
-
-    async fn check_username(username: &String, db: &DatabaseConnection) -> Result<()> {
-        let user = User::find()
-            .filter(user::Column::Username.eq(username))
-            .one(db)
-            .await?;
-
-        if user.is_none() {
-            Ok(())
-        } else {
-            return Err(ServiceError::UsernameAlreadyExists);
         }
     }
 
@@ -194,9 +180,5 @@ impl AuthService {
 
         let wallet = privy_user.wallet;
         Ok(wallet)
-    }
-
-    fn generate_username() -> String {
-        todo!()
     }
 }

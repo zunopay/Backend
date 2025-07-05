@@ -57,7 +57,7 @@ impl UserService {
         let user = Self::find_one(state.clone(), ctx.user_id).await?;
         let display_name = create_merchant_profile_dto.display_name;
         let slug = display_name.to_case(Case::Kebab);
-        let s3_bucket_slug = Self::get_merchant_s3_bucket(&user.username, &slug);
+        let s3_bucket_slug = Self::get_merchant_s3_bucket(&slug);
 
         let cover = match create_merchant_profile_dto.cover {
             Some(cover) => Some(
@@ -88,7 +88,7 @@ impl UserService {
         Ok(merchat)
     }
 
-    fn get_merchant_s3_bucket(username: &String, merchant_slug: &String) -> String {
-        return format!("user/{}/merchant/{}", username, merchant_slug);
+    fn get_merchant_s3_bucket(merchant_slug: &String) -> String {
+        return format!("merchant/{}", merchant_slug);
     }
 }

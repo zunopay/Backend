@@ -49,6 +49,7 @@ pub enum ServiceError {
     KeypairError(String),
     MathError(MathErrorType),
     ReqwestError(String),
+    Custom(String),
 }
 
 impl std::fmt::Display for ServiceError {

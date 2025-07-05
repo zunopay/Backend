@@ -5,7 +5,6 @@ use serde::Serialize;
 #[serde(rename_all = "camelCase")]
 pub struct UserDto {
     id: i32,
-    username: String,
     email: String,
 }
 
@@ -13,7 +12,6 @@ impl From<UserModel> for UserDto {
     fn from(value: UserModel) -> Self {
         UserDto {
             id: value.id,
-            username: value.username,
             email: value.email,
         }
     }

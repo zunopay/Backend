@@ -5,10 +5,7 @@ use crate::{
     constants::GOOGLE_OAUTH_BASE_URL,
     ctx::GoogleCtx,
     error::{Error, Result},
-    services::{
-        AppState,
-        auth::dto::authorization_dto::{GoogleClaims, GoogleJwks},
-    },
+    services::{AppState, auth::dto::authorization_dto::GoogleUser},
 };
 use axum::{
     Json,
@@ -43,7 +40,7 @@ pub async fn mw_resolve_google_ctx(
         return Err(Error::MissingAuthToken);
     }
 
-    let payload = verify_google_token(token).await?;
+    let payload = fetch_google_user_info(token).await?;
     let google_ctx = GoogleCtx {
         email: payload.email,
     };
@@ -52,60 +49,19 @@ pub async fn mw_resolve_google_ctx(
     Ok(next.run(request).await)
 }
 
-async fn verify_google_token(token: &str) -> Result<GoogleClaims> {
-    // Decode google jwt with jwks
-
-    let jwks = fetch_google_jwks().await?;
-
-    let jwt_header = decode_header(token)?;
-    let kid = jwt_header
-        .kid
-        .ok_or(Error::MiddlewareError("Missing kid in google jwt"))?;
-
-    let jwk = jwks
-        .keys
-        .iter()
-        .find(|jwk| jwk.kid == kid)
-        .ok_or(Error::MiddlewareError(
-            "No matching kid found in google jwt",
-        ))?;
-
-    let decoding_key = DecodingKey::from_rsa_components(&jwk.n, &jwk.e)?;
-    let mut validation = Validation::new(jsonwebtoken::Algorithm::RS256);
-    validation.set_issuer(&["https://accounts.google.com"]);
-    validation.set_audience(&[&config::config().GOOGLE_OAUTH_CLIENT_ID]);
-
-    let jwt_data = decode::<GoogleClaims>(token, &decoding_key, &validation)?;
-    let claims = jwt_data.claims;
-
-    // Validate email and exp
-    if !claims.email_verified {
-        return Err(Error::MiddlewareError("Google email is not verified"));
-    }
-
-    let now = usize::try_from(Utc::now().timestamp())
-        .map_err(|_| Error::MiddlewareError("Failed to parse usize from i64 timestamp"))?;
-
-    if claims.exp <= now {
-        return Err(Error::MiddlewareError("Google jwt is expired"));
-    }
-
-    Ok(claims)
-}
-
-// JWKS: Json web key set -> to verify google auth token.
-async fn fetch_google_jwks() -> Result<GoogleJwks> {
+async fn fetch_google_user_info(access_token: &str) -> Result<GoogleUser> {
     let client = Client::new();
-    let url = format!("{}/oauth2/v3/certs", GOOGLE_OAUTH_BASE_URL);
     let response = client
-        .get(&url)
+        .get(format!("{}/oauth2/v3/userinfo", GOOGLE_OAUTH_BASE_URL))
+        .bearer_auth(access_token)
         .send()
         .await
-        .map_err(|_| Error::MiddlewareError("Failed to fetch google oauth certs"))?;
+        .map_err(|_| Error::MiddlewareError("Failed to fetch google user"))?;
 
-    let jwks = response
-        .json::<GoogleJwks>()
+    let google_user = response
+        .json::<GoogleUser>()
         .await
-        .map_err(|_| Error::MiddlewareError("Failed to parse google jwks"))?;
-    Ok(jwks)
+        .map_err(|_| Error::MiddlewareError("Failed to parse google user"))?;
+
+    Ok(google_user)
 }
